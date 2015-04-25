@@ -60,7 +60,7 @@ beta = 1/4;
 % Intial conditions
 u(1) = u0;
 v(1) = v0;
-Fs(1) = getSpringForce(0,0,u0,K,Fy);
+[Fs(1),~] = getSpringForce(0,0,u0,K,alpha,Fy);
 a(2) = (P(1) - C*v(1) - Fs(1))/M;
 
 A1 = 1/(beta*dt^2)*M + gamma/(beta*dt)*C;
@@ -71,7 +71,7 @@ for i=1:length(t)-1
     % These need to be nonlinear
     Fs(i+1) = Fs(i);
     Fsj = Fs(i+1);
-    ktj = getTangentStiffness(Fsj,K,Fy,alpha);
+    [~,ktj] = getSpringForce(0,0,u0,K,alpha,Fy);
     
     Pj = P(i+1) + A1*u(i) + A2*v(i) + A3*a(i);
 
@@ -86,8 +86,7 @@ for i=1:length(t)-1
         ktj_hat = ktj+A1;
         u(i+1) = u(i+1)+(Rj/ktj_hat);
         % Update the spring force and tangent stiffness
-        Fsj = getSpringForce(Fs(i+1), u(i), u(i+1), K, Fy);
-        ktj = getTangentStiffness(Fsj,K,Fy,alpha);
+        [Fsj,ktj] = getSpringForce(0,0,u0,K,alpha,Fy);
     end
 
     Fs(i+1) = Fsj;
@@ -96,7 +95,7 @@ for i=1:length(t)-1
 end
    
 % Get absolute acceleration
-a = (A+a)/g;
+a = a/g + A;
 
 % Determing spectral ordinates
 Sd = max(abs(u));
@@ -127,26 +126,20 @@ end
 
 
 
-function fs = getSpringForce(fprev,uprev,u,k,fy)
+function [fs,kt] = getSpringForce(fprev,uprev,u,k,alpha,fy)
     % Return the spring force, Fs,  at displacement u
     % The previous spring force and displacement are used to calculate the
     % new spring force. The spring force is limited to fy.
     
     fs = fprev - k*(uprev-u);
     
-    % Limit the maximum force to yield
-    fs = sign(fs) * min(abs(fs),fy);
-end
-
-
-function kt = getTangentStiffness(Fs,k,fy,alpha)
-    % Return the tangent stiffness at displacement u
-    % The tangent stiffness is either k, or alpha (post-yield)
-    if Fs>=fy
-        kt = alpha;
-    else
+    if abs(fs)<=fy
         kt = k;
+        fs = sign(fs)*fy;
+    else
+        kt = alpha*k;
     end
+    
+    % Subtract off the stiffness degradation
+    fs = fs + u*k*alpha;
 end
-    
-    
