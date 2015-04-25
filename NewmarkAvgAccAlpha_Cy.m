@@ -60,7 +60,7 @@ beta = 1/4;
 % Intial conditions
 u(1) = u0;
 v(1) = v0;
-[Fs(1),~] = getSpringForce(0,0,u0,K,alpha,Fy);
+[Fs(1),ktj] = getSpringForce(0,0,u0,K,alpha,Fy);
 a(2) = (P(1) - C*v(1) - Fs(1))/M;
 
 A1 = 1/(beta*dt^2)*M + gamma/(beta*dt)*C;
@@ -71,14 +71,16 @@ for i=1:length(t)-1
     % These need to be nonlinear
     Fs(i+1) = Fs(i);
     Fsj = Fs(i+1);
-    [~,ktj] = getSpringForce(0,0,u0,K,alpha,Fy);
+    %ktj = getTangentStiffness(Fsj,K,Fy,alpha);
+    %ktj = getSpringForce(Fsj,uprev,u,k,alpha,fy) 
+%     [~,ktj] = getSpringForce(Fsj,u0,u(1),K,alpha,Fy)
     
     Pj = P(i+1) + A1*u(i) + A2*v(i) + A3*a(i);
 
     for j=1:max_iterations
         Rj = Pj - Fsj - A1*u(i+1);
         if abs(Rj)<tol
-%             fprintf('.')
+             fprintf('.')
             break
         elseif j==10
             fprintf('\nMax iterations exceeded\n')
@@ -86,7 +88,8 @@ for i=1:length(t)-1
         ktj_hat = ktj+A1;
         u(i+1) = u(i+1)+(Rj/ktj_hat);
         % Update the spring force and tangent stiffness
-        [Fsj,ktj] = getSpringForce(0,0,u0,K,alpha,Fy);
+        %Fsj = getSpringForce(Fs(i+1), u(i), u(i+1), K, Fy);
+        [Fsj,ktj] = getSpringForce(Fs(i+1),u(i),u(i+1),K,alpha,Fy);
     end
 
     Fs(i+1) = Fsj;
@@ -126,7 +129,7 @@ end
 
 
 
-function [fs,kt] = getSpringForce(fprev,uprev,u,k,alpha,fy)
+function [fs,kt] = getSpringForceXXXX(fprev,uprev,u,k,alpha,fy)
     % Return the spring force, Fs,  at displacement u
     % The previous spring force and displacement are used to calculate the
     % new spring force. The spring force is limited to fy.
@@ -142,4 +145,31 @@ function [fs,kt] = getSpringForce(fprev,uprev,u,k,alpha,fy)
     
     % Subtract off the stiffness degradation
     fs = fs + u*k*alpha;
+end
+
+
+
+
+function [fs,kt] = getSpringForce(fprev,uprev,u,k,alpha,fy)
+    % Return the spring force, Fs,  at displacement u
+    % The previous spring force and displacement are used to calculate the
+    % new spring force. The spring force is limited to fy.
+    
+    fs = fprev - k*(uprev-u);
+    
+    % Limit the maximum force to yield
+    fs = sign(fs) * min(abs(fs),fy);
+    
+    % Return the tangent stiffness at displacement u
+    % The tangent stiffness is either k, or alpha (post-yield)
+    if abs(fs)>=fy
+        kt = alpha*k;
+    else
+        kt = k;
+    end
+    
+    % Subtract off the stiffness degradation
+    fprintf('%.4f ')
+    fs = fs + u*k*alpha;
+    fprintf('%.4f ')
 end
