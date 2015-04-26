@@ -28,9 +28,6 @@ function [u, v, a, Sd, Sv, Sa, PSv, PSa, Fs, mu] = NewmarkAvgAccAlpha_Cy(Tn, E, 
 % mu - Displacement ductility demand
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-figure()
-
-
 
 % Determining number of points given
 M = 1; % assumed, should cancel out
@@ -75,10 +72,6 @@ for i=1:length(t)-1
     % These need to be nonlinear
     Fs(i+1) = Fs(i);
     Fsj = Fs(i+1);
-    %ktj = getTangentStiffness(Fsj,K,Fy,alpha);
-    %ktj = getSpringForce(Fsj,uprev,u,k,alpha,fy) 
-%     [~,ktj] = getSpringForce(Fsj,u0,u(1),K,alpha,Fy)
-    
     Pj = P(i+1) + A1*u(i) + A2*v(i) + A3*a(i);
 
     for j=1:max_iterations
@@ -99,6 +92,11 @@ for i=1:length(t)-1
     Fs(i+1) = Fsj;
     v(i+1) = gamma/(beta*dt)*(u(i+1)-u(i)) + (1-gamma/beta)*v(i) + dt*(1-gamma/(2*beta))*a(i);
     a(i+1) = 1/(beta*dt^2)*(u(i+1)-u(i)) - 1/(beta*dt)*v(i) - (1/(2*beta)-1)*a(i);
+    
+    % Break if the structure collapses
+    if abs(u(i))>10
+        break
+    end
 end
    
 % Get absolute acceleration
@@ -120,57 +118,50 @@ mu = Sd/uy;
 fprintf('\n')
 set(0, 'defaultFigureColor', [1 1 1], 'defaultTextColor', [0 0 0]);
 figure;
-%subplot(4,1,1); plot(t,A,'k-'); grid on; xlabel('Time, t [s]'); ylabel('Ground Acceleration [g]');  xlim([0 max(t)]); title(['Response History Plots, \mu = ' num2str(mu)],'FontName','Helvectica','FontWeight','bold','FontSize',14);
-%subplot(4,1,2); plot(t,u, 'r-'); grid on; xlabel('Time, t [s]'); ylabel('Displacement [in]'); xlim([0 max(t)]);
-%subplot(4,1,3); plot(t,v, 'g-'); grid on; xlabel('Time, t [s]'); ylabel('Velocity [in/s]'); xlim([0 max(t)]);
-%subplot(4,1,4); plot(t,Fs/(M), 'b-'); grid on; xlabel('Time, t [s]'); ylabel('Acceleration [in/s^2]'); xlim([0 max(t)]);
+subplot(4,1,1); plot(t,A,'k-'); grid on; xlabel('Time, t [s]'); ylabel('Ground Acceleration [g]');  xlim([0 max(t)]); title(['Response History Plots, \mu = ' num2str(mu)],'FontName','Helvectica','FontWeight','bold','FontSize',14);
+subplot(4,1,2); plot(t,u, 'r-'); grid on; xlabel('Time, t [s]'); ylabel('Displacement [in]'); xlim([0 max(t)]);
+subplot(4,1,3); plot(t,v, 'g-'); grid on; xlabel('Time, t [s]'); ylabel('Velocity [in/s]'); xlim([0 max(t)]);
+subplot(4,1,4); plot(t,Fs/(M), 'b-'); grid on; xlabel('Time, t [s]'); ylabel('Acceleration [in/s^2]'); xlim([0 max(t)]);
 
 
 figure;
-plot(u,Fs); grid on; xlabel('Displacement [in]'); ylabel('Resisting Force, F_s [kips]');
+plot(u,Fs); grid on; xlabel('Displacement [in]'); ylabel('Resisting Force, F_s [kips]'); hold on;
 title('Force-Displacement');
+
+
+x = linspace(-4,4,1000);
+uy = Fy/K;
+Fmax = Fy + K*alpha*(x-uy);
+Fmin = -Fy + K*alpha*(x+uy);
+plot(x,Fmax,'g:')
+plot(x,Fmin,'g:')
+plot(x,-Fy*ones(length(x)), 'r:' )
+plot(x,Fy*ones(length(x)), 'r:' )
 end
-
-
-
-function [fs,kt] = getSpringForceXXXX(fprev,uprev,u,k,alpha,fy)
-    % Return the spring force, Fs,  at displacement u
-    % The previous spring force and displacement are used to calculate the
-    % new spring force. The spring force is limited to fy.
-    
-    fs = fprev - k*(uprev-u);
-    
-    if abs(fs)<=fy
-        kt = k;
-        fs = sign(fs)*fy;
-    else
-        kt = alpha*k;
-    end
-    
-    % Subtract off the stiffness degradation
-    if (abs(fs)>=fs)
-        fs = fs + 0
-    end
-end
-
-
 
 
 function [fs,kt] = getSpringForce(fprev,uprev,u,k,alpha,fy)
-    % Return the spring force, Fs,  at displacement u
+    % Return the spring force, Fs, and tangent stiffness at displacement u
     % The previous spring force and displacement are used to calculate the
     % new spring force. The spring force is limited to fy.
-    fstest = fprev + k*(u-uprev);
-
-    % Return the tangent stiffness at displacement u
-    % The tangent stiffness is either k, or alpha (post-yield)
-    if abs(fstest)>=fy
-        kt = 0;%alpha*k;
-    else
-        kt = k;
-    end
     
-    % Subtract off the stiffness degradation
-    fs = fprev + kt*(u-uprev);
-    fs = sign(fs)*min(abs(fs),fy);
+    % Define the envelope for the billinear hysteresis
+    uy = fy/k;
+    Fmax = fy + k*alpha*(u-uy);
+    Fmin = -fy + k*alpha*(u+uy);
+    
+    fstest = fprev + k*(u-uprev);
+    
+    % Return the tangent stiffness at displacement u
+    % The tangent stiffness is either k, or alpha*k (post-yield)
+    if fstest>=Fmax
+        fs = Fmax;
+        kt = alpha*k;
+    elseif fstest<=Fmin
+        fs = Fmin;
+        kt = alpha*k;
+    else
+        fs = fprev + k*(u-uprev);
+        kt = k;    
+    end
 end
