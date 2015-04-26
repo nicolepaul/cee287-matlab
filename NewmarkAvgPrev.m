@@ -100,7 +100,7 @@ end
 
 
 % Get absolute acceleration
-a = (A+a)/g;
+a = A + a/g;
 
 % Determing spectral ordinates
 Sd = max(abs(u));
