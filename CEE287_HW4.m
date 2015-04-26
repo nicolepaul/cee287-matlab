@@ -6,7 +6,7 @@
 
 Tn = 1.5;
 E = 0.05;
-alpha = -0.0015;
+alpha = -0.15;
 u0 = 0;
 v0 = 0;
 load(fullfile('OtherData','ElCentroGMTH.mat'));

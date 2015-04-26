@@ -60,7 +60,7 @@ beta = 1/4;
 % Intial conditions
 u(1) = u0;
 v(1) = v0;
-[Fs(1),~] = getSpringForce(0,0,u0,K,alpha,Fy);
+[Fs(1),ktj] = getSpringForce(0,0,u0,K,alpha,Fy);
 a(2) = (P(1) - C*v(1) - Fs(1))/M;
 
 A1 = 1/(beta*dt^2)*M + gamma/(beta*dt)*C;
@@ -73,14 +73,14 @@ for i=1:length(t)-1
     Fsj = Fs(i+1);
     %ktj = getTangentStiffness(Fsj,K,Fy,alpha);
     %ktj = getSpringForce(Fsj,uprev,u,k,alpha,fy) 
-    [~,ktj] = getSpringForce(Fsj,u0,u(1),K,alpha,Fy)
+%     [~,ktj] = getSpringForce(Fsj,u0,u(1),K,alpha,Fy)
     
     Pj = P(i+1) + A1*u(i) + A2*v(i) + A3*a(i);
 
     for j=1:max_iterations
         Rj = Pj - Fsj - A1*u(i+1);
         if abs(Rj)<tol
-%             fprintf('.')
+             fprintf('.')
             break
         elseif j==10
             fprintf('\nMax iterations exceeded\n')
@@ -144,7 +144,9 @@ function [fs,kt] = getSpringForceXXXX(fprev,uprev,u,k,alpha,fy)
     end
     
     % Subtract off the stiffness degradation
-    fs = fs + u*k*alpha;
+    if (abs(fs)>=fs)
+        fs = fs + 0
+    end
 end
 
 
@@ -160,15 +162,16 @@ function [fs,kt] = getSpringForce(fprev,uprev,u,k,alpha,fy)
     % Limit the maximum force to yield
     fs = sign(fs) * min(abs(fs),fy);
     
-        % Return the tangent stiffness at displacement u
+    % Return the tangent stiffness at displacement u
     % The tangent stiffness is either k, or alpha (post-yield)
-    if fs>=fy
+    if abs(fs)>=fy
         kt = alpha*k;
     else
         kt = k;
     end
     
     % Subtract off the stiffness degradation
-    fs = fs + u*k*alpha;
-    fprintf('%.4f ')
+   
+    if (abs(fs)>=fs)
+        if (abs(fs)>=fs)
 end

@@ -28,6 +28,10 @@ function [u, v, a, Sd, Sv, Sa, PSv, PSa, Fs, mu] = NewmarkAvgAccAlpha_Cy(Tn, E, 
 % mu - Displacement ductility demand
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+figure()
+
+
+
 % Determining number of points given
 M = 1; % assumed, should cancel out
 g = 386; % assumed input is in [g]
@@ -116,10 +120,10 @@ mu = Sd/uy;
 fprintf('\n')
 set(0, 'defaultFigureColor', [1 1 1], 'defaultTextColor', [0 0 0]);
 figure;
-subplot(4,1,1); plot(t,A,'k-'); grid on; xlabel('Time, t [s]'); ylabel('Ground Acceleration [g]');  xlim([0 max(t)]); title(['Response History Plots, \mu = ' num2str(mu)],'FontName','Helvectica','FontWeight','bold','FontSize',14);
-subplot(4,1,2); plot(t,u, 'r-'); grid on; xlabel('Time, t [s]'); ylabel('Displacement [in]'); xlim([0 max(t)]);
-subplot(4,1,3); plot(t,v, 'g-'); grid on; xlabel('Time, t [s]'); ylabel('Velocity [in/s]'); xlim([0 max(t)]);
-subplot(4,1,4); plot(t,Fs/(M), 'b-'); grid on; xlabel('Time, t [s]'); ylabel('Acceleration [in/s^2]'); xlim([0 max(t)]);
+%subplot(4,1,1); plot(t,A,'k-'); grid on; xlabel('Time, t [s]'); ylabel('Ground Acceleration [g]');  xlim([0 max(t)]); title(['Response History Plots, \mu = ' num2str(mu)],'FontName','Helvectica','FontWeight','bold','FontSize',14);
+%subplot(4,1,2); plot(t,u, 'r-'); grid on; xlabel('Time, t [s]'); ylabel('Displacement [in]'); xlim([0 max(t)]);
+%subplot(4,1,3); plot(t,v, 'g-'); grid on; xlabel('Time, t [s]'); ylabel('Velocity [in/s]'); xlim([0 max(t)]);
+%subplot(4,1,4); plot(t,Fs/(M), 'b-'); grid on; xlabel('Time, t [s]'); ylabel('Acceleration [in/s^2]'); xlim([0 max(t)]);
 
 
 figure;
@@ -144,7 +148,9 @@ function [fs,kt] = getSpringForceXXXX(fprev,uprev,u,k,alpha,fy)
     end
     
     % Subtract off the stiffness degradation
-    fs = fs + u*k*alpha;
+    if (abs(fs)>=fs)
+        fs = fs + 0
+    end
 end
 
 
@@ -154,22 +160,17 @@ function [fs,kt] = getSpringForce(fprev,uprev,u,k,alpha,fy)
     % Return the spring force, Fs,  at displacement u
     % The previous spring force and displacement are used to calculate the
     % new spring force. The spring force is limited to fy.
-    
-    fs = fprev - k*(uprev-u);
-    
-    % Limit the maximum force to yield
-    fs = sign(fs) * min(abs(fs),fy);
-    
+    fstest = fprev + k*(u-uprev);
+
     % Return the tangent stiffness at displacement u
     % The tangent stiffness is either k, or alpha (post-yield)
-    if abs(fs)>=fy
-        kt = alpha*k;
+    if abs(fstest)>=fy
+        kt = 0;%alpha*k;
     else
         kt = k;
     end
     
     % Subtract off the stiffness degradation
-    fprintf('%.4f ')
-    fs = fs + u*k*alpha;
-    fprintf('%.4f ')
+    fs = fprev + kt*(u-uprev);
+    fs = sign(fs)*min(abs(fs),fy);
 end
