@@ -76,32 +76,31 @@ for i = 1:nGM
 end
 %%
 % Finding when collapse occurs
-horz_tol = 1.5;
-horz_diff = -(mu_mat(2:end,:) - mu_mat(1:end-1,:));
+horz_tol = 0.6;
+horz_diff = abs(mu_mat(2:end,:) - mu_mat(1:end-1,:));
 Cc = zeros(nGM,1);
 ind_c = zeros(nGM,1);
 mu_c = zeros(nGM,1);
 for i = 1:nGM
-    inds_c = find((horz_diff(:,i))>horz_tol);
+    inds_c = find(abs(horz_diff(:,i))>horz_tol);
     ind_c(i) = inds_c(end);
     Cc(i) = Cy_range(ind_c(i));
     mu_c(i) = mu_mat(ind_c(i),i);
 end
 
-% Plotting
+    %%
 figure;
 colorcell = {'r','m','g','b','c'};
 for i = 1:nGM
-    h(i) = plot(mu_mat(:,i),Cy_range,strcat(colorcell{i},'-')); hold on;
-    plot(1,Ce(i),strcat(colorcell{i},'^'),'MarkerSize',8);
-    plot(mu_c(i),Cc(i),strcat(colorcell{i},'v'),'MarkerSize',8);
+    h(i) = plot(mu_mat(:,i),Cy_range,colorcell{i}); hold on;
+    plot(1,Ce(i),strcat(colorcell{i},'o'));
 end
 grid on;
 xlabel('Ductility Demand, \mu');
 ylabel('Seismic Coefficient, C_y');
 title('Bilinear SDOF: T_n=1.0s, \xi=5%, \alpha=-0.15 - Loma Prieta');
 legend(h,'Parking','SLAC_1','SLAC_2','VA_1','VA_2','Location','best');
-xlim([0 20]);
+xlim([0 5]);
 hold off;
 
 
