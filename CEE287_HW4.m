@@ -54,34 +54,44 @@ for i = 4:N
 end
 convtog = 0.00101971621;
 GM = convtog*[Parking(:,2) SLAC_1(:,2) SLAC_2(:,2) VA_1(:,2) VA_2(:,2)];
-dt = Parking(:,1); % same for all GM
+dt = Parking(2,1); % same for all GM
 nGM = 5;
 
 % Using root-finding algorithm to find Cy for mu=1 for each GM
 fn = @(C, A) FindMu2(Tn, E, A, dt, u0, v0, C, alpha) - 1;
-muvec = NaN(nGM, 1);
+Cvec = NaN(nGM, 1);
 for i = 1:nGM
     fn_A = @(C) fn(C, GM(:,i));
-    muvec(i) = fzero(fn_A, 0.5);
+    Cvec(i) = fzero(fn_A, 0.5);
 end
 
-%% Plotting entire goddamn thing
-
+% Plotting entire curves
 m = 100;
-Cy_range = linspace(0,1,m);
+Cy_range = linspace(0.05,1,m);
 mu_mat = zeros(m, nGM);
 for i = 1:nGM
     for j = 1:m
         mu_mat(j,i) = FindMu2(Tn, E, GM(:,i), dt, u0, v0, Cy_range(j), alpha);
     end
 end
+
+% Finding when collapse occurs
+horz_tol = 10^-3;
+
     
 figure;
-plot(mu_mat,Cy_range); grid on;
+colorcell = {'r','m','g','b','c'};
+for i = 1:nGM
+    h(i) = plot(mu_mat(:,i),Cy_range,colorcell{i}); hold on;
+    plot(1,Cvec(i),strcat(colorcell{i},'o'));
+end
+grid on;
 xlabel('Ductility Demand, \mu');
 ylabel('Seismic Coefficient, C_y');
 title('Bilinear SDOF: T_n=1.0s, \xi=5%, \alpha=-0.15 - Loma Prieta');
-legend('Parking','SLAC_1','SLAC_2','VA_1','VA_2','Location','best');
+legend(h,'Parking','SLAC_1','SLAC_2','VA_1','VA_2','Location','best');
+xlim([0 5]);
+hold off;
 
 
 

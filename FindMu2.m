@@ -78,7 +78,7 @@ for i=1:length(t)-1
     for j=1:max_iterations
         Rj = Pj - Fsj - A1*u(i+1);
         if abs(Rj)<tol
-             fprintf('.')
+%              fprintf('.')
             break
         elseif j==10
             fprintf('\nMax iterations exceeded\n')
