@@ -9,12 +9,14 @@ E = 0.05;
 alpha = -0.15;
 u0 = 0;
 v0 = 0;
+dt = 0.02;
+dtnew = 0.01;
 load(fullfile('OtherData','ElCentroGMTH.mat'));
 A = A_ElCentro;
-dt = 0.02;
+A = interpolateGM(A,dt,dtnew);
 Cy = 0.129;
 
-[u, v, a, Sd, Sv, Sa, PSv, PSa, Fs, mu] = NewmarkAvgAccAlpha_Cy(Tn, E, A, dt, u0, v0, Cy, alpha);
+[u, v, a, Sd, Sv, Sa, PSv, PSa, Fs, mu] = NewmarkAvgAccAlpha_Cy(Tn, E, A, dtnew, u0, v0, Cy, alpha);
 
 %% 
 
@@ -33,3 +35,4 @@ K = wn^2*M;
 Cy = uy*K/(M*g);
 alpha = 0;
 [u, v, a, Sd, Sv, Sa, PSv, PSa, Fs, mu] = NewmarkAvgPrev(Tn, E, A_ElCentro, dt, u0, v0, Cy, 0);
+

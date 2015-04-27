@@ -73,6 +73,7 @@ for i=1:length(t)-1
     Fs(i+1) = Fs(i);
     Fsj = Fs(i+1);
     Pj = P(i+1) + A1*u(i) + A2*v(i) + A3*a(i);
+    [Fsj,ktj] = getSpringForce(Fs(i+1),u(i),u(i+1),K,alpha,Fy);
 
     for j=1:max_iterations
         Rj = Pj - Fsj - A1*u(i+1);
@@ -85,7 +86,6 @@ for i=1:length(t)-1
         ktj_hat = ktj+A1;
         u(i+1) = u(i+1)+(Rj/ktj_hat);
         % Update the spring force and tangent stiffness
-        %Fsj = getSpringForce(Fs(i+1), u(i), u(i+1), K, Fy);
         [Fsj,ktj] = getSpringForce(Fs(i+1),u(i),u(i+1),K,alpha,Fy);
     end
 
@@ -129,14 +129,15 @@ plot(u,Fs); grid on; xlabel('Displacement [in]'); ylabel('Resisting Force, F_s [
 title('Force-Displacement');
 
 
-x = linspace(-4,4,1000);
-uy = Fy/K;
-Fmax = Fy + K*alpha*(x-uy);
-Fmin = -Fy + K*alpha*(x+uy);
-plot(x,Fmax,'g:')
-plot(x,Fmin,'g:')
-plot(x,-Fy*ones(length(x)), 'r:' )
-plot(x,Fy*ones(length(x)), 'r:' )
+% Plot the envelop
+% x = linspace(-4,4,1000);
+% uy = Fy/K;
+% Fmax = Fy + K*alpha*(x-uy);
+% Fmin = -Fy + K*alpha*(x+uy);
+% plot(x,Fmax,'g:')
+% plot(x,Fmin,'g:')
+% plot(x,-Fy*ones(length(x)), 'r:' )
+% plot(x,Fy*ones(length(x)), 'r:' )
 end
 
 
