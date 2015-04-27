@@ -121,7 +121,7 @@ figure;
 subplot(4,1,1); plot(t,A,'k-'); grid on; xlabel('Time, t [s]'); ylabel('Ground Acceleration [g]');  xlim([0 max(t)]); title(['Response History Plots, \mu = ' num2str(mu)],'FontName','Helvectica','FontWeight','bold','FontSize',14);
 subplot(4,1,2); plot(t,u, 'r-'); grid on; xlabel('Time, t [s]'); ylabel('Displacement [in]'); xlim([0 max(t)]);
 subplot(4,1,3); plot(t,v, 'g-'); grid on; xlabel('Time, t [s]'); ylabel('Velocity [in/s]'); xlim([0 max(t)]);
-subplot(4,1,4); plot(t,Fs/(M), 'b-'); grid on; xlabel('Time, t [s]'); ylabel('Acceleration [in/s^2]'); xlim([0 max(t)]);
+subplot(4,1,4); plot(t,Fs/(M), 'b-'); grid on; xlabel('Time, t [s]'); ylabel('Force [kips]'); xlim([0 max(t)]);
 
 
 figure;

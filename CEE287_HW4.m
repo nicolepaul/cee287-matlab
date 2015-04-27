@@ -3,7 +3,6 @@
 % Nicole Paul
 
 %% PART A - Problem 1
-
 Tn = 1.5;
 E = 0.05;
 alpha = -0.15;
