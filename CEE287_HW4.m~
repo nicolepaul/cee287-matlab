@@ -72,16 +72,13 @@ Cy_range = linspace(0,1,m);
 mu_mat = zeros(m, nGM);
 for i = 1:nGM
     for j = 1:m
-        mu_mat(j,i) = FindMu2(Tn, E, GM(:,i), dt, u0, v0, Cy_range(j), alpha);
+        mu_mat(j,i) = FindMu2(Tn, E, GM(:,i), dt, u0, v0, C, alpha);
     end
 end
     
 figure;
 plot(mu_mat,Cy_range); grid on;
-xlabel('Ductility Demand, \mu');
-ylabel('Seismic Coefficient, C_y');
-title('Bilinear SDOF: T_n=1.0s, \xi=5%, \alpha=-0.15 - Loma Prieta');
-legend('Parking','SLAC_1','SLAC_2','VA_1','VA_2','Location','best');
+xlabel('
 
 
 
