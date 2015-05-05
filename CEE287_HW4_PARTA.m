@@ -14,10 +14,10 @@ dtnew = 0.01;
 load(fullfile('OtherData','ElCentroGMTH.mat'));
 A = A_ElCentro;
 A = interpolateGM(A,dt,dtnew);
-Cy = 0.129;
+Cy = 0.077;
 
 [u, v, a, Sd, Sv, Sa, PSv, PSa, Fs, mu] = NewmarkAvgAccAlpha_Cy(Tn, E, A, dtnew, u0, v0, Cy, alpha);
-
+drawnow()
 %% 
 
 load(fullfile('OtherData','ElCentro10s'));
@@ -36,6 +36,7 @@ Cy = uy*K/(M*g);
 alpha = 0;
 %[u, v, a, Sd, Sv, Sa, PSv, PSa, Fs, mu] = NewmarkAvgPrev(Tn, E, A_ElCentro, dt, u0, v0, Cy, 0);
 [u, v, a, Sd, Sv, Sa, PSv, PSa, Fs, mu] = NewmarkAvgAccAlpha_Cy(Tn, E, A_ElCentro, dt, u0, v0, Cy, alpha);
+
 
 %% Part A - Problem 2
 
@@ -92,9 +93,9 @@ end
 figure;
 colorcell = {'r','m','g','b','c'};
 for i = 1:nGM
-    h(i) = plot(mu_mat(:,i),Cy_range,strcat(colorcell{i},'-')); hold on;
-    plot(1,Ce(i),strcat(colorcell{i},'^'),'MarkerSize',8);
-    plot(mu_c(i),Cc(i),strcat(colorcell{i},'v'),'MarkerSize',8);
+     h(i) = plot(mu_mat(:,i),Cy_range,strcat(colorcell{i},'-')); hold on;
+     plot(1,Ce(i),strcat(colorcell{i},'^'),'MarkerSize',8);
+     plot(mu_c(i),Cc(i),strcat(colorcell{i},'v'),'MarkerSize',8);
 end
 grid on;
 xlabel('Ductility Demand, \mu');
@@ -103,6 +104,5 @@ title('Bilinear SDOF: T_n=1.0s, \xi=5%, \alpha=-0.15 - Loma Prieta');
 legend(h,'Parking','SLAC_1','SLAC_2','VA_1','VA_2','Location','best');
 xlim([0 20]);
 hold off;
-
 
 
