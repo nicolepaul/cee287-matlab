@@ -14,14 +14,13 @@ T
 Gamma
 printModalVectorTable(sphi);
 
-figure; hold on; colorcell={'r','g','b'};
+figure; hold on; colorcell={'r','g','b'
 for i=1:3
     modeshape = sphi(:,i);
     gamma = Gamma(i);
-    plot(gamma*[0 modeshape'],(0:nfloors),colorcell{i},'LineWidth',2);
+    plot(gamma*[0 modeshape'],(0:nfloors));
 end
-grid on;
-legend({'Mode 1','Mode 2','Mode 3'},'Location','best');
+legend({'Mode 1','Mode 2','Mode 3'});
 title('\Gamma_i\phi_i (First three modes)')
 ylabel('Floor')
 xlabel('\Gamma_i\phi_i')
@@ -63,8 +62,8 @@ disp(Gammat)
 % Plot the theoretical and real mode shapes
 figure; hold on;
 for i=1:3
-    plot([0 phiModal(:,i)'], (0:nfloors),'g');
-    plot([0 phiTheory(:,i)'],(0:nfloors),'b'); grid on;
+    plot([0 phiModal(:,i)'], (0:nfloors),'r');
+    plot([0 phiTheory(:,i)'],(0:nfloors),'b');
 end
 legend({'Modal Analysis','Theoretical'});
 title('Comparison of mode shapes (Roof normalized)')
