@@ -20,8 +20,8 @@ function [w,T,sphi,Gamma] = eigenvalueAnalysis(nfloors,mass,stiffness)
     T = 2*pi./w;
    
     % Orthonormalizing the mode shapes
-    sphi = roofNormalizeModeShapes(sphi,nfloors);
-    %sphi = massNormalizeModeShapes(sphi,M,nfloors);
+    %sphi = roofNormalizeModeShapes(sphi,nfloors);
+    sphi = massNormalizeModeShapes(sphi,M,nfloors);
      
     % Calculate the modal participation factors
     Gamma = zeros(nfloors,1);

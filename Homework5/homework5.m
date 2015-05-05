@@ -109,11 +109,71 @@ Tn = T(1);
 [~,~,~,~,~,Sa,~,~] = RecurrenceSDOF(Tn,E,A,timestep,u0,v0,false);
 
 % We use the Sa value from the spectra as our Cs
-Cs = Sa; %?????????????????????????
-equivalentLateralForce(Tn,Cs,Cd,I,M,K,Hi)
+R = 8;
+Ie = 1;
+Cs = Sa/(R/Ie);
+Cd = 5.5; % Special moment frame
+nfloors = 9;
+g = 386.1;
+mass = 1800/g; % kips/g
+stiffness = 1700; % kips/in
+Hi = 118/9; %ft
+[M, K] = computeMatrices(nfloors,mass,stiffness);
+equivalentLateralForce(Tn,Cs,Cd,Ie,M,K,Hi)
 
 
+%% Question 4
+% Find the spectral acceleration of each mode
+fprintf('Tm     Sa     Csm\n')
+F = zeros(length(T),5);
+Uxe = zeros(length(T),5);
+Ux = zeros(length(T),5);
+deltaX = zeros(length(T),5);
+deltaXe = zeros(length(T),5);
 
+for i=1:5
+    Tm = T(i);
+    [~,~,~,~,~,Sa,~,~] = RecurrenceSDOF(Tm,E,A,timestep,u0,v0,false);
+    Csm = Sa/(R/Ie);
+    An = Csm*g;
+    fprintf('%.3f   %.4f  %.4f  \n',Tm,Sa,Csm)
+    
+    % Compute the modal forces for mode i
+    F(:,i) = Gamma(i)*sphi(:,i)*mass*An;
+    
+    % Make floor 9 F(1,1)
+    F = flipud(F);
+    
+    % Compute shear forces at each floor
+    V(:,i) = cumsum(F(:,i));
+    
+    % Compute displacements at each floor (reduced)
+    Uxe(:,i) = Gamma(i)*sphi(:,i)*An/(w(i))^2;
+    Uxe(:,i) = flipud(Uxe(:,i));
+   
+    % Compute the amplifiied displacements
+    Ux(:,i) = Cd*Uxe(:,i)/Ie;
+    
+    % Compute the interstorey drift (reduced)
+    displacement = flipud(Uxe(:,i));
+    deltaXe(:,i) = (displacement - [0 displacement(1:end-1)']')/(Hi*12);
+    deltaXe(:,i) = flipud(deltaXe(:,i));
+    
+    % Compute the interstorey drift
+    deltaX(:,i) = Cd*deltaXe(:,i)/Ie;
+    
+end
+
+% Combine forces with
+% SRSS-----------------------------------------------------------------------------------
+FSRSS = (sum(F.^2, 2)).^0.5
+FSRSS_with_floors = flipud(FSRSS)
+
+%V
+%Uxe
+%Ux
+deltaXe
+deltaX
 
 
 

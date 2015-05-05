@@ -20,7 +20,6 @@ function equivalentLateralForce(Tn,Cs,Cd,I,M,K,Hi)
     V = Cs*W;
     fprintf('The seismic base shear, Vb = %.3f kips\n\n',V);
     
-    
     heights = Hi*(1:length(M))';
     masses = diag(M);
     weights = masses; % Assumes mass in kip/g
@@ -76,8 +75,8 @@ function equivalentLateralForce(Tn,Cs,Cd,I,M,K,Hi)
     % Print inelastic displacement along the height
     figure;
     plot([0 deltaX'], [0 heights'],'-o')
-    title('\delta_E Along Height')
-    xlabel('\delta_E [in]')
+    title('\delta_X Along Height')
+    xlabel('\delta_X [in]')
     ylabel('Height[ft]')
     
     % Print inelastic drift along the height
