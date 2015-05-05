@@ -124,56 +124,27 @@ equivalentLateralForce(Tn,Cs,Cd,Ie,M,K,Hi)
 
 %% Question 4
 % Find the spectral acceleration of each mode
-fprintf('Tm     Sa     Csm\n')
-F = zeros(length(T),5);
-Uxe = zeros(length(T),5);
-Ux = zeros(length(T),5);
-deltaX = zeros(length(T),5);
-deltaXe = zeros(length(T),5);
+nmodes = 5;
+Csm = zeros(nmodes,1);
 
+% Calculate ehe spectral accleration, Csm for each mode
+fprintf('Tm     Sa     Csm\n')
 for i=1:5
     Tm = T(i);
     [~,~,~,~,~,Sa,~,~] = RecurrenceSDOF(Tm,E,A,timestep,u0,v0,false);
-    Csm = Sa/(R/Ie);
-    An = Csm*g;
+    Csm(i) = Sa/(R/Ie);
     fprintf('%.3f   %.4f  %.4f  \n',Tm,Sa,Csm)
-    
-    % Compute the modal forces for mode i
-    F(:,i) = Gamma(i)*sphi(:,i)*mass*An;
-    
-    % Make floor 9 F(1,1)
-    F = flipud(F);
-    
-    % Compute shear forces at each floor
-    V(:,i) = cumsum(F(:,i));
-    
-    % Compute displacements at each floor (reduced)
-    Uxe(:,i) = Gamma(i)*sphi(:,i)*An/(w(i))^2;
-    Uxe(:,i) = flipud(Uxe(:,i));
-   
-    % Compute the amplifiied displacements
-    Ux(:,i) = Cd*Uxe(:,i)/Ie;
-    
-    % Compute the interstorey drift (reduced)
-    displacement = flipud(Uxe(:,i));
-    deltaXe(:,i) = (displacement - [0 displacement(1:end-1)']')/(Hi*12);
-    deltaXe(:,i) = flipud(deltaXe(:,i));
-    
-    % Compute the interstorey drift
-    deltaX(:,i) = Cd*deltaXe(:,i)/Ie;
-    
 end
 
-% Combine forces with
-% SRSS-----------------------------------------------------------------------------------
-FSRSS = (sum(F.^2, 2)).^0.5
-FSRSS_with_floors = flipud(FSRSS)
+[F5,V5,Uxe5,Ux5,deltaXe5,deltaX5] = Question4ModalAnalysis(nfloors,mass,stiffness,Csm,Cd,Ie,Hi)
+[F3,V3,Uxe3,Ux3,deltaXe3,deltaX3] = Question4ModalAnalysis(nfloors,mass,stiffness,Csm(1:3),Cd,Ie,Hi)
 
-%V
-%Uxe
-%Ux
-deltaXe
-deltaX
+% Compute SRSS
+F3Combined = (sum(F3.^2,2)).^0.5;
+V3Combined = (sum(V3.^2,2)).^0.5;
+Ux3Combined = (sum(Ux3.^2,2)).^0.5;
+Dx3Combined = (sum(deltaX3.^2,2)).^0.5;
+
 
 %% Question 5
 
