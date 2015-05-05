@@ -75,12 +75,12 @@ xlabel('\phi_i (Roof normalized)')
 
 
 %% Question 3
-GM = dlmread('gm_hw_5.txt',' ',2,0);
-timestep = GM(2,1) - GM(1,1);
+load gmhw5;
+timestep = gmhw5(2,1) - gmhw5(1,1);
 conv_cm_to_g = 0.001019716;
 
 % Spectra parameters
-A = conv_cm_to_g*GM(:,2);
+A = conv_cm_to_g*gmhw5(:,2);
 u0 = 0;
 v0 = 0;
 E = 0.035; % Damping ratio
@@ -175,8 +175,60 @@ FSRSS_with_floors = flipud(FSRSS)
 deltaXe
 deltaX
 
+%% Question 5
+
+nmodes = 5;
+Gamma_n = NaN(nmodes,1);
+u_n = NaN(9,nmodes,4251);
+IDR = NaN(9,nmodes,4251);
+f_n = NaN(9,nmodes,4251);
+V_n = NaN(9,nmodes,4251);
+phi = sphi;
+phi_dr = phi';
+for i = 1:nmodes
+    Gamma_n(i) = (phi(:,i)'*M*ones(size(phi(:,i))))/(phi(:,i)'*M*phi(:,i));
+    [u,~,a,Sd,~,Sa,~,~] = RecurrenceSDOF(T(i),E,A,timestep,u0,v0,false);
+    conv_cm_to_in = 0.393701;
+    for j = 1:4251
+        u_n(:,i,j) = Gamma_n(i)*phi(:,i).*u(j)*conv_cm_to_in;
+        IDR(:,i,j) = (1/(Hi*12))*Gamma_n(i)*(phi_dr(:,i+1)-phi_dr(:,i)).*u(j)*conv_cm_to_in;
+        f_n(:,i,j) = Gamma_n(i)*phi(:,i)*a(j)*g;
+    end
+    for j = 1:4251
+        fn_flip = flipud(f_n(:,i,j));
+        V_n(:,i,j) = cumsum(fn_flip);
+        V_n(:,i,j) = flipud(V_n(:,i,j));
+    end
+end
+
+u_hist = reshape(sum(u_n,2),9,4251);
+IDR_hist = reshape(sum(IDR,2),9,4251);
+f_hist = reshape(sum(f_n,2),9,4251);
+V_hist = reshape(sum(V_n,2),9,4251);
 
 
+% figure;
+% plot(gmhw5(:,1),u_hist); grid on;
+% xlabel('Time, t [s]'); ylabel('Displacement, u_i [in]');
+% legend('1','2','3','4','5','6','7','8','9','Location','best');
+% title('Displacement History');
+% 
+% 
+% figure;
+% plot(gmhw5(:,1),IDR_hist); grid on;
+% xlabel('Time, t [s]'); ylabel('IDR');
+% legend('1','2','3','4','5','6','7','8','9','Location','best');
+% title('Interstory Drift Ratio History');
 
+u_max = max(abs(u_hist),[],2);
+IDR_max = max(abs(IDR_hist),[],2);
+f_max = max(abs(f_hist),[],2);
+V_max = max(abs(V_hist),[],2);
+
+figure;
+subplot(2,2,1); plot(u_max,1:9,'o-'); grid on; xlabel('Displacement [in]'); ylabel('Floor'); title('Maximum Displacements');
+subplot(2,2,2); plot(IDR_max,1:9,'o-'); grid on; xlabel('Interstory Drift Ratio'); ylabel('Floor'); title('Maximum Drift Ratios');
+subplot(2,2,3); plot(f_max,1:9,'ro-'); grid on; xlabel('Lateral Force [kips]'); ylabel('Floor'); title('Maximum Lateral Forces');
+subplot(2,2,4); plot(V_max,1:9,'ro-'); grid on; xlabel('Story Shear [kips]'); ylabel('Floor'); title('Maximum Story Shear');
 
 
