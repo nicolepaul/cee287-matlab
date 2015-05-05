@@ -29,6 +29,10 @@ for i = 1:nGM
        mu_mat(j,i) = FindMu2(Tn, E, GM(:,i), dt, u0, v0, Cy_range(j), alpha);
    end
 end
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6f2cfb362107b29554488630bf66e4b7f15b7d5d
 % Finding when collapse occurs
 horz_tol = 1.5;
 horz_diff = -(mu_mat(2:end,:) - mu_mat(1:end-1,:));
