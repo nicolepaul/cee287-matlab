@@ -9,16 +9,16 @@ function [u,v,a,Sd,Sv,Sa,PSv,PSa] = RecurrenceSDOF(Tn,E,A,dt,u0,v0,isPlot)
 % Tn - undamped period of vibration of the system [s]
 % E - damping ratio of the system
 % A - ground motion acceleration time history [g]
-% u0 - initial displacement [cm]
-% v0 - initial velocity [cm/s]
+% u0 - initial displacement [in]
+% v0 - initial velocity [in/s]
 % isPlot - should we plot the response history
 % 
 % OUTPUTS:
 % u - relative displacement time history [cm]
-% v - relative velocity time history [cm/s]
+% v - relative velocity time history [in/s]
 % a - absolute acceleration time history [g]
 % Sd - spectral displacement [cm]
-% Sv - spectral velocity [cm/s]
+% Sv - spectral velocity [in/s]
 % Sa - spectral acceleration [g]
 % PSv - pseudo velocity
 % PSa - pseudo acceleration
@@ -27,7 +27,7 @@ function [u,v,a,Sd,Sv,Sa,PSv,PSa] = RecurrenceSDOF(Tn,E,A,dt,u0,v0,isPlot)
 
 %% Additional Inputs
 
-convg = 980.664;
+convg = 386;
 m=1; % This should cancel out, so set arbitrarily to 1
 
 

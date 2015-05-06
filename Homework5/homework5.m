@@ -155,14 +155,15 @@ IDR = NaN(9,nmodes,4251);
 f_n = NaN(9,nmodes,4251);
 V_n = NaN(9,nmodes,4251);
 phi = sphi;
-phi_dr = phi';
+phi_dr = [zeros(1,9); phi];
 for i = 1:nmodes
     Gamma_n(i) = (phi(:,i)'*M*ones(size(phi(:,i))))/(phi(:,i)'*M*phi(:,i));
     [u,~,a,Sd,~,Sa,~,~] = RecurrenceSDOF(T(i),E,A,timestep,u0,v0,false);
-    conv_cm_to_in = 0.393701;
     for j = 1:4251
-        u_n(:,i,j) = Gamma_n(i)*phi(:,i).*u(j)*conv_cm_to_in;
-        IDR(:,i,j) = (1/(Hi*12))*Gamma_n(i)*(phi_dr(:,i+1)-phi_dr(:,i)).*u(j)*conv_cm_to_in;
+        u_n(:,i,j) = Gamma_n(i)*phi(:,i).*u(j);
+        for k = 1:9
+            IDR(k,i,j) = (1/(Hi*12))*Gamma_n(i)*(phi_dr(k+1,i)-phi_dr(k,i)).*u(j);
+        end
         f_n(:,i,j) = Gamma_n(i)*phi(:,i)*a(j)*g;
     end
     for j = 1:4251
@@ -190,16 +191,49 @@ V_hist = reshape(sum(V_n,2),9,4251);
 % xlabel('Time, t [s]'); ylabel('IDR');
 % legend('1','2','3','4','5','6','7','8','9','Location','best');
 % title('Interstory Drift Ratio History');
+%%  Sum of modes for fl 9
+floor=9;
+figure;
+subplot(5,1,1); plot(gmhw5(:,1),100*reshape(IDR(floor,1,:),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR [%]'); title(['Floor ' num2str(floor) ': Mode 1']); xlim([0 85]); ylim([-0.1 0.1]);
+subplot(5,1,2); plot(gmhw5(:,1),100*reshape(sum(IDR(floor,1:2,:),2),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR  [%]'); title(['Floor ' num2str(floor) ': Mode 1 + 2']); xlim([0 85]); ylim([-0.1 0.1]);
+subplot(5,1,3); plot(gmhw5(:,1),100*reshape(sum(IDR(floor,1:3,:),2),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR  [%]'); title(['Floor ' num2str(floor) ': Mode 1 + 2 + 3']); xlim([0 85]); ylim([-0.1 0.1]);
+subplot(5,1,4); plot(gmhw5(:,1),100*reshape(sum(IDR(floor,1:4,:),2),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR  [%]'); title(['Floor ' num2str(floor) ': Mode 1 + 2 + 3 + 4']); xlim([0 85]); ylim([-0.1 0.1]);
+subplot(5,1,5); plot(gmhw5(:,1),100*reshape(sum(IDR(floor,1:5,:),2),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR  [%]'); title(['Floor ' num2str(floor) ': Mode 1 + 2 + 3+ 4 + 5']); xlim([0 85]); ylim([-0.1 0.1]);
 
-u_max = max(abs(u_hist),[],2);
-IDR_max = max(abs(IDR_hist),[],2);
-f_max = max(abs(f_hist),[],2);
-V_max = max(abs(V_hist),[],2);
+%% Each mode for fl 9
+floor=9;
+figure;
+subplot(5,1,1); plot(gmhw5(:,1),100*reshape(IDR(floor,1,:),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR [%]'); title(['Floor ' num2str(floor) ': Mode 1']); xlim([0 85]); ylim([-0.1 0.1]);
+subplot(5,1,2); plot(gmhw5(:,1),100*reshape(IDR(floor,2,:),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR  [%]'); title(['Floor ' num2str(floor) ': Mode 2']); xlim([0 85]); ylim([-0.1 0.1]);
+subplot(5,1,3); plot(gmhw5(:,1),100*reshape(IDR(floor,3,:),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR  [%]'); title(['Floor ' num2str(floor) ': Mode 3']); xlim([0 85]); ylim([-0.1 0.1]);
+subplot(5,1,4); plot(gmhw5(:,1),100*reshape(IDR(floor,4,:),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR  [%]'); title(['Floor ' num2str(floor) ': Mode 4']); xlim([0 85]); ylim([-0.1 0.1]);
+subplot(5,1,5); plot(gmhw5(:,1),100*reshape(IDR(floor,5,:),1,4251)); grid on; xlabel('Time, t [s]'); ylabel('IDR  [%]'); title(['Floor ' num2str(floor) ': Mode 5']); xlim([0 85]); ylim([-0.1 0.1]);
+
+
+%%
+u_max = [0; max(abs(u_hist),[],2)];
+IDR_max = [max(abs(IDR_hist),[],2); 0];
+f_max = [0; max(abs(f_hist),[],2)];
+V_max = [max(abs(V_hist),[],2); 0];
+
 
 figure;
-subplot(2,2,1); plot(u_max,1:9,'o-'); grid on; xlabel('Displacement [in]'); ylabel('Floor'); title('Maximum Displacements');
-subplot(2,2,2); plot(IDR_max,1:9,'o-'); grid on; xlabel('Interstory Drift Ratio'); ylabel('Floor'); title('Maximum Drift Ratios');
-subplot(2,2,3); plot(f_max,1:9,'ro-'); grid on; xlabel('Lateral Force [kips]'); ylabel('Floor'); title('Maximum Lateral Forces');
-subplot(2,2,4); plot(V_max,1:9,'ro-'); grid on; xlabel('Story Shear [kips]'); ylabel('Floor'); title('Maximum Story Shear');
+subplot(2,2,1); plot(u_max,0:9,'o-'); grid on; xlabel('Displacement [in]'); ylabel('Floor'); title('Maximum Displacements'); ylim([0 9]); xlim([0 6]);
+subplot(2,2,2); plot(100*IDR_max,0:9,'o-'); grid on; xlabel('Interstory Drift Ratio [%]'); ylabel('Floor'); title('Maximum Drift Ratios'); ylim([0 9]); xlim([0 0.6]);
+subplot(2,2,3); plot(f_max,0:9,'ro-'); grid on; xlabel('Lateral Force [kips]'); ylabel('Floor'); title('Maximum Lateral Forces'); ylim([0 9]); xlim([0 60]);
+subplot(2,2,4); plot(V_max,0:9,'ro-'); grid on; xlabel('Story Shear [kips]'); ylabel('Floor'); title('Maximum Story Shear'); ylim([0 9]); xlim([0 400]);
 
+
+%%
+
+u_m = [ zeros(1,5); max(abs(cumsum(u_n,2)),[],3)];
+IDR_m = [max(abs(cumsum(IDR,2)),[],3); zeros(1,5)];
+f_m = [ zeros(1,5); max(abs(cumsum(f_n,2)),[],3)];
+V_m = [max(abs(cumsum(V_n,2)),[],3); zeros(1,5)];
+
+figure;
+subplot(2,2,1); plot(u_m,0:9,'o-'); grid on; xlabel('Displacement [in]'); ylabel('Floor'); title('Maximum Displacements'); ylim([0 9]); xlim([0 6]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
+subplot(2,2,2); plot(100*IDR_m,0:9,'o-'); grid on; xlabel('Interstory Drift Ratio [%]'); ylabel('Floor'); title('Maximum Drift Ratios'); ylim([0 9]); xlim([0 0.6]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
+subplot(2,2,3); plot(f_m,0:9,'o-'); grid on; xlabel('Lateral Force [kips]'); ylabel('Floor'); title('Maximum Lateral Forces'); ylim([0 9]); xlim([0 60]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
+subplot(2,2,4); plot(V_m,0:9,'o-'); grid on; xlabel('Story Shear [kips]'); ylabel('Floor'); title('Maximum Story Shear'); ylim([0 9]); xlim([0 400]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
 
