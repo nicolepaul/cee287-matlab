@@ -1,4 +1,4 @@
-function [F,V,Uxe,Ux,deltaXe,deltaX] = Question4ModalAnalysis(nfloors,mass,stiffness,Csm,Cd,Ie,Hi)
+function [F,V,U,drift] = Question4ModalAnalysis(nfloors,mass,stiffness,Csm,Hi)
     % Find the spectral acceleration of each mode
     % Inputs:
     %   @nfloors: the number of floors in the building
@@ -20,13 +20,11 @@ function [F,V,Uxe,Ux,deltaXe,deltaX] = Question4ModalAnalysis(nfloors,mass,stiff
     
     nmodes = length(Csm);
     
-    g = 386.0886;
+    g = 386.1;
     F = zeros(length(T),nmodes);
     V = zeros(length(T),nmodes);
-    Uxe = zeros(length(T),nmodes);
-    Ux = zeros(length(T),nmodes);
-    deltaX = zeros(length(T),nmodes);
-    deltaXe = zeros(length(T),nmodes);
+    U = zeros(length(T),nmodes);
+    drift = zeros(length(T),nmodes);
 
     fprintf('Tm     Sa     Csm\n')
     for i=1:length(Csm)
@@ -43,19 +41,13 @@ function [F,V,Uxe,Ux,deltaXe,deltaX] = Question4ModalAnalysis(nfloors,mass,stiff
         V(:,i) = cumsum(F(:,i));
 
         % Compute displacements at each floor (reduced)
-        Uxe(:,i) = Gamma(i)*sphi(:,i)*An/(w(i))^2;
-        Uxe(:,i) = flipud(Uxe(:,i));
-
-        % Compute the amplifiied displacements
-        Ux(:,i) = Cd*Uxe(:,i)/Ie;
+        U(:,i) = Gamma(i)*sphi(:,i)*An/(w(i))^2;
+        U(:,i) = flipud(U(:,i));
 
         % Compute the interstorey drift (reduced)
-        displacement = flipud(Uxe(:,i));
-        deltaXe(:,i) = (displacement - [0 displacement(1:end-1)']')/(Hi*12);
-        deltaXe(:,i) = flipud(deltaXe(:,i));
-
-        % Compute the interstorey drift
-        deltaX(:,i) = Cd*deltaXe(:,i)/Ie;
+        displacement = flipud(U(:,i));
+        drift(:,i) = (displacement - [0 displacement(1:end-1)']')/(Hi*12);
+        drift(:,i) = flipud(drift(:,i));
     end
 end
     

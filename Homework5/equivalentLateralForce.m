@@ -1,28 +1,24 @@
-function equivalentLateralForce(Tn,Cs,Cd,I,M,K,Hi)
+function equivalentLateralForce(Tn,Cs,M,K,Hi)
 % Complete the equivalent lateral force procedure
     % @Tn - The natural period of the structure
     % @Cs - The seismic response coefficient
-    % @Cd - ...
-    % @I - The importance factor
     % @M - The mass matrix [kips/g]
     % @K - The stiffness matrix [kips/in]
     % @Hi - The height of each floor [ft]
-    
-    %Cs = SDS/(R/Ie)
-    %Cs < SD1/(T*(R/Ie))       for T<Tl
-    %Cs < SD1*TL/(T^2*(R/Ie))  for T>Tl
-    %Cs > 0.044SDS*Ie >= 0.01
-    
+     
     % Calculate the weight of the structure
     % Assumes the mass matrix is in units kips/g
     % Based on Miranda, MDOF Seismic Analysis A, page 15
-    W = sum(diag(M));
+    
+    g = 386.1; % in/s^2
+    W = sum(diag(M))*g;
     V = Cs*W;
     fprintf('The seismic base shear, Vb = %.3f kips\n\n',V);
     
+    floors = (1:length(M))';
     heights = Hi*(1:length(M))';
     masses = diag(M);
-    weights = masses; % Assumes mass in kip/g
+    weights = masses*g;
     Fx = zeros(length(M),1);
     Vx = zeros(length(M),1);
     
@@ -35,56 +31,57 @@ function equivalentLateralForce(Tn,Cs,Cd,I,M,K,Hi)
         Fx(floor) = Cvx*V;
         Vx(floor) = sum(Fx);
         fprintf('%i  %8.1f  %8.1f', floor, masses(floor), weights(floor));
-        fprintf('%8.0f  %8.3f ', heights(floor), Cvx);
-        fprintf('%8.3f  %8.3f \n', Fx(floor), Vx(floor));
+        fprintf('%8.0f  %9.3f ', heights(floor), Cvx);
+        fprintf('%8.3f  %9.3f \n', Fx(floor), Vx(floor));
     end
     
-    deltaXE = K\Fx;
-    deltaX = Cd/I*deltaXE;
-    driftX = (deltaX - [0 deltaX(1:end-1)']')/Hi;
+    delta = K\Fx;
+    drift = (delta - [0 delta(1:end-1)']')/(12*Hi);
     
     % Print the table of displacements
-    fprintf('\nFloor delXE[in]  delX[in]    IDR\n')
-    for floor=1:length(M)
-        floor = length(M)-floor+1;
-        fprintf('%i  %10.3f ', floor, deltaXE(floor));
-        fprintf('%10.3f %8.3f \n', deltaX(floor), driftX(floor));
+    fprintf('\nFloor displacement[in]   IDR[%%]\n')
+    for i=1:length(M)
+        floor = length(M)-i+1;
+        fprintf('%i  %12.3f ', floor, delta(floor))
+        fprintf('%12.3f\n',    100*drift(floor));
     end
-    
-    % Print forces along the height
-    figure;
-    plot([0 Fx'], [0 heights'], '-o')
-    title('Force Along Height')
-    xlabel('Force [kips]')
-    ylabel('Height [ft]')
-    
-    % Print shear forces along the height
-    figure;
-    plotSquare(Vx, heights,'-o');
-    title('Shear Along Height')
-    xlabel('Shear [kips]')
-    ylabel('Height [ft]')
-    
-    % Print reduced elastic displacement along the height
-    figure;
-    plot([0 deltaXE'], [0 heights'],'-o')
-    title('\delta_X_E Along Height')
-    xlabel('\delta_X_E [in]')
-    ylabel('Height[ft]')
     
     % Print inelastic displacement along the height
     figure;
-    plot([0 deltaX'], [0 heights'],'-o')
-    title('\delta_X Along Height')
-    xlabel('\delta_X [in]')
-    ylabel('Height[ft]')
+    subplot(2,2,1);
+    plot([0 delta'], [0 floors'],'-o')
+    title('Lateral displacement, \delta_X')
+    xlabel('\delta [in]')
+    ylabel('Floor');
+    grid on;
+    axis([0 10 0 9]);
     
     % Print inelastic drift along the height
-    figure;
-    plotSquare(driftX,heights,'-o');
-    title('\Delta_E Along Height')
-    xlabel('\Delta_E [in]')
-    ylabel('Height[ft]')
+    subplot(2,2,2);
+    plotSquare(100*drift,floors,'-o');
+    title('Interstory Drift [%] \Delta/h')
+    xlabel('\Delta/h [%]')
+    ylabel('Floor');
+    grid on;
+    axis([0 2.0 0 9]);
+    
+    % Print forces along the height
+    subplot(2,2,3);
+    plot([0 Fx'], [0 floors'], '-o')
+    title('Lateral Force')
+    xlabel('Lateral Force [kips]')
+    ylabel('Floor')
+    grid on;
+    axis([0 500 0 9]);
+    
+    % Print shear forces along the height
+    subplot(2,2,4);
+    plotSquare(Vx, floors,'-o');
+    title('Shear Force')
+    xlabel('Shear [kips]')
+    ylabel('Floor')
+    grid on;
+    axis([0 2000 0 9]);
 end
 
 

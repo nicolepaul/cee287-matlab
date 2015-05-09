@@ -75,6 +75,7 @@ xlabel('\phi_i (Roof normalized)')
 
 
 %% Question 3
+fprintf('----- Question 3 ------ \n')
 load gmhw5;
 timestep = gmhw5(2,1) - gmhw5(1,1);
 conv_cm_to_g = 0.001019716;
@@ -109,17 +110,15 @@ Tn = T(1);
 [~,~,~,~,~,Sa,~,~] = RecurrenceSDOF(Tn,E,A,timestep,u0,v0,false);
 
 % We use the Sa value from the spectra as our Cs
-R = 8;
-Ie = 1;
-Cs = Sa/(R/Ie);
-Cd = 5.5; % Special moment frame
+% If we were using the code approach we would reduce by (R/Ie)
+Cs = Sa;
 nfloors = 9;
 g = 386.1;
 mass = 1800/g; % kips/g
 stiffness = 1700; % kips/in
 Hi = 118/9; %ft
 [M, K] = computeMatrices(nfloors,mass,stiffness);
-equivalentLateralForce(Tn,Cs,Cd,Ie,M,K,Hi)
+equivalentLateralForce(Tn,Cs,M,K,Hi)
 
 
 %% Question 4
@@ -132,22 +131,88 @@ fprintf('Tm     Sa     Csm\n')
 for i=1:5
     Tm = T(i);
     [~,~,~,~,~,Sa,~,~] = RecurrenceSDOF(Tm,E,A,timestep,u0,v0,false);
-    Csm(i) = Sa/(R/Ie);
+    Csm(i) = Sa;
     fprintf('%.3f   %.4f  %.4f  \n',Tm,Sa,Csm)
 end
 
-[F5,V5,Uxe5,Ux5,deltaXe5,deltaX5] = Question4ModalAnalysis(nfloors,mass,stiffness,Csm,Cd,Ie,Hi)
-[F3,V3,Uxe3,Ux3,deltaXe3,deltaX3] = Question4ModalAnalysis(nfloors,mass,stiffness,Csm(1:3),Cd,Ie,Hi)
+[F5,V5,U5,drift5] = Question4ModalAnalysis(nfloors,mass,stiffness,Csm,Hi);
+[F3,V3,U3,drift3] = Question4ModalAnalysis(nfloors,mass,stiffness,Csm(1:3),Hi);
 
-% Compute SRSS
-F3Combined = (sum(F3.^2,2)).^0.5;
-V3Combined = (sum(V3.^2,2)).^0.5;
-Ux3Combined = (sum(Ux3.^2,2)).^0.5;
-Dx3Combined = (sum(deltaX3.^2,2)).^0.5;
+%close all;
+figure; hold on;
+floors = (9:-1:1)';
+
+% Find the SS combination of first five modes
+FnCombined = (sum(F5(:,1:5).^2,2));
+VnCombined = (sum(V5(:,1:5).^2,2));
+UxnCombined = (sum(U5(:,1:5).^2,2));
+DxnCombined = (sum(drift5(:,1:5).^2,2));
+clc
+% Find the ratio of each mode contribution to total SS contribution
+for mode=1:5
+    fprintf('----- Mode %i -----',mode)
+    FnContr = 100*(F5(:,mode).^2) ./ FnCombined
+    VnContr = 100*(V5(:,mode).^2) ./ VnCombined
+    UnContr = 100*(U5(:,mode).^2) ./ UxnCombined
+    DnContr = 100*(drift5(:,mode).^2) ./ DxnCombined
+end
+    
+    
+
+
+
+for nmodes=1:5
+    % Compute SRSS for 3 Modes
+    FnCombined = (sum(F5(:,1:nmodes).^2,2)).^0.5;
+    VnCombined = (sum(V5(:,1:nmodes).^2,2)).^0.5;
+    UxnCombined = (sum(U5(:,1:nmodes).^2,2)).^0.5;
+    DxnCombined = (sum(drift5(:,1:nmodes).^2,2)).^0.5;
+    
+    % Print forces along the height
+    subplot(2,2,3); hold on;
+    plot([FnCombined' 0], [floors' 0], '-o')
+    title('Lateral Force')
+    xlabel('Lateral Force [kips]')
+    ylabel('Floor')
+    grid on;
+    axis([0 500 0 9]);
+    
+    % Print shear forces along the height
+    subplot(2,2,4); hold on;
+    plotSquare(flip(VnCombined), flip(floors),'-o');
+    title('Shear Force')
+    xlabel('Shear [kips]')
+    ylabel('Floor')
+    grid on;
+    axis([0 2000 0 9]);
+      
+    % Print inelastic displacement along the height
+    subplot(2,2,1); hold on;
+    plot([UxnCombined' 0], [floors' 0],'-o')
+    title('Lateral displacement, \delta_X')
+    xlabel('\delta_X [in]')
+    ylabel('Floor');
+    grid on;
+    axis([0 10 0 9]);
+    
+    % Print inelastic drift along the height
+    subplot(2,2,2); hold on;
+    plotSquare(flip(100*DxnCombined),flip(floors),'-o');
+    title('Interstory Drift [%] \Delta_E')
+    xlabel('\Delta_E [%]')
+    ylabel('Floor');
+    grid on;
+    axis([0 0.6 0 9]); 
+end
+text = {'1 Mode','2 Modes','3 Modes','4 Modes','5 Modes'};
+subplot(2,2,1); legend(text,'location','best');
+subplot(2,2,2); legend(text,'location','best');
+subplot(2,2,3); legend(text,'location','best');
+subplot(2,2,4); legend(text,'location','best');
+
 
 
 %% Question 5
-
 nmodes = 5;
 Gamma_n = NaN(nmodes,1);
 u_n = NaN(9,nmodes,4251);
