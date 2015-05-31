@@ -1,10 +1,4 @@
-%% CEE 287: Homework 8
-% Max Ferguson, Nicole Paul
-
-%% Part A
-
-%syms alpha real positive
-alpha =  0.056409983382519;
+function drift = get_drift(alpha)
 
 gravity = 386.1; % in/s^2
 designSd1 = 1.0;
@@ -34,16 +28,10 @@ nmodes = 1;
 % dependant but the ratio of them will be unique.
 beta = 1/nfloors; % Assume same mass at each floor
 
-fprintf('Part A:\n')
 ks = sphi(:,1)'*K*sphi(:,1);
 ms = sphi(:,1)'*M*sphi(:,1);
 ki = alpha*ks;
 mi = beta*ms;
-
-fprintf('Equivalent Stiffness, ks = %.4f [kips/in per unit mass]\n',ks);
-fprintf('Equivalent Mass, ms = %.4f [kips.s^2/in per unit mass]\n',ms);
-% fprintf('Isolator Stiffness, ki = %.4f [kips/in per unit mass]\n',ki);
-% fprintf('Isolator Mass, mi = %.4f [kips.s^2/in per unit mass]\n',mi);
 
 % Analyze the equivalent 2DOF structure with the following properties
 % ks,ms,ki,mi. First a modal analysis is conducted to find the period
@@ -83,28 +71,10 @@ Beta1 = GammaStruct*sphi(end);
 temp_sphi = [0; sphi];
 Beta2 = max(hroof*(temp_sphi(2:end)-temp_sphi(1:end-1))./(heights(2:end)*sphi(end))');
 
-Sd1 = abs(Uj1(2) - Uj1(1));
+u = sqrt(Uj1.^2+Uj2.^2);%abs(Uj1(2) - Uj1(1));
+Sd1 = abs(u(2) - u(1));
 IDR_maxSDOF = Sd1/((2/3)*hroof*12);
 IDR_maxMDOF = (2/3)*Beta1*Beta2*IDR_maxSDOF;
 
-fprintf('The drift %.4f [%%]',100*IDR_maxMDOF)
-%alpha_design = eval(solve(IDR_maxMDOF-targetDrift==0))
-
-%% 
-
-targetdrift = 0.005;
-f = @(alpha) targetdrift - get_drift(alpha);
-alpha_design = fsolve(f, 0.05);
-
-m = 1000;
-alpha_range = linspace(0,2,m);
-drift_range = NaN(size(alpha_range));
-for i = 1:m
-    drift_range(i) = get_drift(alpha_range(i));
+drift = IDR_maxMDOF;
 end
-
-figure;
-plot(alpha_range, drift_range, 'b-', alpha_design, targetdrift, 'ro'); grid on;
-xlabel('Alpha, \alpha'); ylabel('Max Interstory Drift Ratio');
-title('Influence of Alpha on IDR_{max}');
-
