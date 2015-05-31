@@ -212,7 +212,9 @@ subplot(2,2,4); legend(text,'location','best');
 
 
 
+
 %% Question 5
+% Initialization
 nmodes = 5;
 Gamma_n = NaN(nmodes,1);
 u_n = NaN(9,nmodes,4251);
@@ -221,28 +223,55 @@ f_n = NaN(9,nmodes,4251);
 V_n = NaN(9,nmodes,4251);
 phi = sphi;
 phi_dr = [zeros(1,9); phi];
+
+% Calculating for each mode
 for i = 1:nmodes
+    % Modal participation factor
     Gamma_n(i) = (phi(:,i)'*M*ones(size(phi(:,i))))/(phi(:,i)'*M*phi(:,i));
+    % Displacement and acceleration histories for each mode
     [u,~,a,Sd,~,Sa,~,~] = RecurrenceSDOF(T(i),E,A,timestep,u0,v0,false);
+    % Calculating for each time step
     for j = 1:4251
+        % Displacement for each mode and timestep on all floors
         u_n(:,i,j) = Gamma_n(i)*phi(:,i).*u(j);
+        % Calculating for each floor
         for k = 1:9
+            % Interstory drift ratio for each floor for each timestep
             IDR(k,i,j) = (1/(Hi*12))*Gamma_n(i)*(phi_dr(k+1,i)-phi_dr(k,i)).*u(j);
         end
-        f_n(:,i,j) = Gamma_n(i)*phi(:,i)*a(j)*g;
+        % Lateral force for each mode, across all floors
+        f_n(:,i,j) = Gamma_n(i)*phi(:,i)*mass*a(j)*g;
+    end
+    % Cumulatively summing the lateral forces in order to get shears
+    for j = 1:4251
+        fn_flip = flipud(f_n(:,i,j)); % Flipping because shear is the sum of forces from top to bottom
+        V_n(:,i,j) = cumsum(fn_flip);
+%         V_n(:,i,j) = flipud(V_n(:,i,j)); % Flipping again to get back into standard convention
     end
     for j = 1:4251
-        fn_flip = flipud(f_n(:,i,j));
-        V_n(:,i,j) = cumsum(fn_flip);
         V_n(:,i,j) = flipud(V_n(:,i,j));
     end
 end
 
+% Summing all modes to get the total response histories
 u_hist = reshape(sum(u_n,2),9,4251);
 IDR_hist = reshape(sum(IDR,2),9,4251);
 f_hist = reshape(sum(f_n,2),9,4251);
 V_hist = reshape(sum(V_n,2),9,4251);
 
+% Taking absolute maximum across all timesteps for each response parameter
+u_max = [0; max(abs(u_hist),[],2)];
+IDR_max = [max(abs(IDR_hist),[],2); 0];
+f_max = [0; max(abs(f_hist),[],2)];
+V_max = [max(abs(V_hist),[],2); 0];
+
+% Taking cumulative sum across modes for the absolute maximum across all
+% timesteps to see how much each mode participates in total response using
+% 5 modes
+u_m = [ zeros(1,5); max(abs(cumsum(u_n,2)),[],3)];
+IDR_m = [max(abs(cumsum(IDR,2)),[],3); zeros(1,5)];
+f_m = [ zeros(1,5); max(abs(cumsum(f_n,2)),[],3)];
+V_m = [max(abs(cumsum(V_n,2)),[],3); zeros(1,5)];
 
 % figure;
 % plot(gmhw5(:,1),u_hist); grid on;
@@ -276,29 +305,21 @@ subplot(5,1,5); plot(gmhw5(:,1),100*reshape(IDR(floor,5,:),1,4251)); grid on; xl
 
 
 %%
-u_max = [0; max(abs(u_hist),[],2)];
-IDR_max = [max(abs(IDR_hist),[],2); 0];
-f_max = [0; max(abs(f_hist),[],2)];
-V_max = [max(abs(V_hist),[],2); 0];
 
 
 figure;
 subplot(2,2,1); plot(u_max,0:9,'o-'); grid on; xlabel('Displacement [in]'); ylabel('Floor'); title('Maximum Displacements'); ylim([0 9]); xlim([0 6]);
 subplot(2,2,2); plot(100*IDR_max,0:9,'o-'); grid on; xlabel('Interstory Drift Ratio [%]'); ylabel('Floor'); title('Maximum Drift Ratios'); ylim([0 9]); xlim([0 0.6]);
-subplot(2,2,3); plot(f_max,0:9,'ro-'); grid on; xlabel('Lateral Force [kips]'); ylabel('Floor'); title('Maximum Lateral Forces'); ylim([0 9]); xlim([0 60]);
-subplot(2,2,4); plot(V_max,0:9,'ro-'); grid on; xlabel('Story Shear [kips]'); ylabel('Floor'); title('Maximum Story Shear'); ylim([0 9]); xlim([0 400]);
+subplot(2,2,3); plot(f_max,0:9,'ro-'); grid on; xlabel('Lateral Force [kips]'); ylabel('Floor'); title('Maximum Lateral Forces'); ylim([0 9]); xlim([0 500]);
+subplot(2,2,4); plot(V_max,0:9,'ro-'); grid on; xlabel('Story Shear [kips]'); ylabel('Floor'); title('Maximum Story Shear'); ylim([0 9]); xlim([0 2000]);
 
 
 %%
 
-u_m = [ zeros(1,5); max(abs(cumsum(u_n,2)),[],3)];
-IDR_m = [max(abs(cumsum(IDR,2)),[],3); zeros(1,5)];
-f_m = [ zeros(1,5); max(abs(cumsum(f_n,2)),[],3)];
-V_m = [max(abs(cumsum(V_n,2)),[],3); zeros(1,5)];
 
 figure;
 subplot(2,2,1); plot(u_m,0:9,'o-'); grid on; xlabel('Displacement [in]'); ylabel('Floor'); title('Maximum Displacements'); ylim([0 9]); xlim([0 6]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
 subplot(2,2,2); plot(100*IDR_m,0:9,'o-'); grid on; xlabel('Interstory Drift Ratio [%]'); ylabel('Floor'); title('Maximum Drift Ratios'); ylim([0 9]); xlim([0 0.6]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
-subplot(2,2,3); plot(f_m,0:9,'o-'); grid on; xlabel('Lateral Force [kips]'); ylabel('Floor'); title('Maximum Lateral Forces'); ylim([0 9]); xlim([0 60]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
-subplot(2,2,4); plot(V_m,0:9,'o-'); grid on; xlabel('Story Shear [kips]'); ylabel('Floor'); title('Maximum Story Shear'); ylim([0 9]); xlim([0 400]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
+subplot(2,2,3); plot(f_m,0:9,'o-'); grid on; xlabel('Lateral Force [kips]'); ylabel('Floor'); title('Maximum Lateral Forces'); ylim([0 9]); xlim([0 500]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
+subplot(2,2,4); plot(V_m,0:9,'o-'); grid on; xlabel('Story Shear [kips]'); ylabel('Floor'); title('Maximum Story Shear'); ylim([0 9]); xlim([0 2000]); legend('1 mode','2 modes','3 modes','4 modes','5 modes','Location','best');
 
