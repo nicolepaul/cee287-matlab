@@ -3,7 +3,8 @@
 
 %% Part A
 
-syms alpha real positive
+%syms alpha real positive
+alpha = 0.05665;
 
 gravity = 386.1; % in/s^2
 designSd1 = 1.0;
@@ -83,7 +84,8 @@ temp_sphi = [0; sphi];
 Beta2 = max(hroof*(temp_sphi(2:end)-temp_sphi(1:end-1))./(heights(2:end)*sphi(end))');
 
 Sd1 = abs(Uj1(2) - Uj1(1));
-IDR_maxSDOF = Sd1/((2/3)*hroof);
+IDR_maxSDOF = Sd1/((2/3)*hroof*12);
 IDR_maxMDOF = (2/3)*Beta1*Beta2*IDR_maxSDOF;
 
-alpha_design = eval(solve(IDR_maxMDOF-targetDrift==0))
+fprintf('The drift %.4f [%%]',100*IDR_maxMDOF)
+%alpha_design = eval(solve(IDR_maxMDOF-targetDrift==0))
