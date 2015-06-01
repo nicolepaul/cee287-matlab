@@ -115,7 +115,6 @@ title('Influence of Alpha on IDR_{max}');
 % Scale up stiffness from 2DOF system
 MDOF_mass = nfloors*mass;
 MDOF_stiffness = ks * MDOF_mass/ms;
-
 stiffness_fixed = stiffness*ones(1,nfloors);
 stiffness_isolated = [MDOF_stiffness,stiffness_fixed];
 
@@ -124,11 +123,22 @@ mass_isolated = mass*ones(1,nfloors+1);
 
 
 % 1) Get the stiffness and mass matrix of the equivalent structure
-[M_fixed, K_fixed] = computeMatrices(nfloors, mass_fixed, stiffness_fixed)
-[M_isolated, K_isolated] = computeMatrices(nfloors+1, mass_isolated, stiffness_isolated)
+[M_fixed, K_fixed] = computeMatrices(nfloors, mass_fixed, stiffness_fixed);
+[M_isolated, K_isolated] = computeMatrices(nfloors+1, mass_isolated, stiffness_isolated);
 
-% 2) Comparison plot of Story displacements for isolated vs fixed base structure
-[~,T,sphi,Gamma] = eigenvalueAnalysis(nfloors,nmodes,mass,stiffness);
+% Determining fundamental periods
+nmodes = 2;
+[~,T_fixed,sphi_fixed,Gamma_fixed] = eigenvalueAnalysis(nfloors,nmodes,mass_fixed,stiffness_fixed);
+[~,T_isolated,sphi_isolated,Gamma_isolated] = eigenvalueAnalysis(nfloors+1,nmodes,mass_isolated,stiffness_isolated);
 
+% Determining C_sm (seismic coefficient for each mode)
+Sds = 1.5;
+Sd1 = 1.0;
+Csm_fixed = min([Sds*ones(2,1) Sd1./T_fixed],[],2);
+Csm_isolated = min([Sds*ones(2,1) Sd1./T_isolated],[],2);
 
+% Performing response spectrum analysis
+[F_fixed,V_fixed,U_fixed,drift_fixed] = Question4ModalAnalysis(nfloors,mass_fixed,stiffness_fixed,Csm_fixed,heights(2:end));
+[F_isolated,V_isolated,U_isolated,drift_isolated] = Question4ModalAnalysis(nfloors+1,mass_isolated,stiffness_isolated,Csm_isolated,heights);
 
+%  2) Comparison plot of Story displacements for isolated vs fixed base structure
