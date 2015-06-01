@@ -38,7 +38,7 @@ fprintf('Part A:\n')
 ks = sphi(:,1)'*K*sphi(:,1);
 ms = sphi(:,1)'*M*sphi(:,1);
 ki = alpha*ks;
-mi = beta*ms;
+mi = beta*(nfloors*mass);
 
 fprintf('Equivalent Stiffness, ks = %.4f [kips/in per unit mass]\n',ks);
 fprintf('Equivalent Mass, ms = %.4f [kips.s^2/in per unit mass]\n',ms);
@@ -83,18 +83,19 @@ Beta1 = GammaStruct*sphi(end);
 temp_sphi = [0; sphi];
 Beta2 = max(hroof*(temp_sphi(2:end)-temp_sphi(1:end-1))./(heights(2:end)*sphi(end))');
 
-Sd1 = abs(Uj1(2) - Uj1(1));
+u = sqrt(Uj1.^2+Uj2.^2);
+Sd1 = abs(u(2) - u(1));
 IDR_maxSDOF = Sd1/((2/3)*hroof*12);
 IDR_maxMDOF = (2/3)*Beta1*Beta2*IDR_maxSDOF;
 
-fprintf('The drift %.4f [%%]',100*IDR_maxMDOF)
+fprintf('The drift %.4f [%%]\n',100*IDR_maxMDOF)
 %alpha_design = eval(solve(IDR_maxMDOF-targetDrift==0))
 
 %% 
 
 targetdrift = 0.005;
 f = @(alpha) targetdrift - get_drift(alpha);
-alpha_design = fsolve(f, 0.05);
+alpha_design = fsolve2(f, 0.05);
 
 m = 1000;
 alpha_range = linspace(0,2,m);
@@ -107,4 +108,27 @@ figure;
 plot(alpha_range, drift_range, 'b-', alpha_design, targetdrift, 'ro'); grid on;
 xlabel('Alpha, \alpha'); ylabel('Max Interstory Drift Ratio');
 title('Influence of Alpha on IDR_{max}');
+
+
+%% Part B
+
+% Scale up stiffness from 2DOF system
+MDOF_mass = nfloors*mass;
+MDOF_stiffness = ks * MDOF_mass/ms;
+
+stiffness_fixed = stiffness*ones(1,nfloors);
+stiffness_isolated = [MDOF_stiffness,stiffness_fixed];
+
+mass_fixed = mass*ones(1,nfloors);
+mass_isolated = mass*ones(1,nfloors+1);
+
+
+% 1) Get the stiffness and mass matrix of the equivalent structure
+[M_fixed, K_fixed] = computeMatrices(nfloors, mass_fixed, stiffness_fixed)
+[M_isolated, K_isolated] = computeMatrices(nfloors+1, mass_isolated, stiffness_isolated)
+
+% 2) Comparison plot of Story displacements for isolated vs fixed base structure
+[~,T,sphi,Gamma] = eigenvalueAnalysis(nfloors,nmodes,mass,stiffness);
+
+
 
