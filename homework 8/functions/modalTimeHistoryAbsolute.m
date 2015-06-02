@@ -48,7 +48,7 @@ function [u,v,a,f,vs,Sd,Sv,Sa] = modalTimeHistoryAbsolute(M,T,Gamma,Phi,E,Acc,dt
     
     % Postprocessing
     % Calculate the shear force for all modes and times
-    VS = cumsum(F,3,'reverse');
+    VS = flipdim(cumsum(flipdim(F,3),3),3);
   
     u = squeeze(sum(U,2));
     v = squeeze(sum(V,2));

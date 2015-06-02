@@ -64,17 +64,26 @@ B2 = 1 - a2*T2^0.3/(T2+1)^0.65;
 An1 = B1*designSd1/T1;
 An2 = B2*designSd1;
 
+
 Uj1 = Gamma1*phi1*An1*gravity/w1squared;
 Uj2 = Gamma2*phi2*An2*gravity/w2squared;
 
+hroof = hroof*12;
+H = (2/3)*hroof;
+heights = heights*12;
 Beta1 = GammaStruct*sphi(end);
 temp_sphi = [0; sphi];
 Beta2 = max(hroof*(temp_sphi(2:end)-temp_sphi(1:end-1))./(heights(2:end)*sphi(end))');
+% hroof = hroof*12;
+% H = (2/3)*hroof;
+% Beta1 = Gamma1*phi1(1);
+% Beta2 = hroof*(phi1(1)-phi1(2))/(H*phi1(1));
 
-u = sqrt(Uj1.^2+Uj2.^2);%abs(Uj1(2) - Uj1(1));
+u = sqrt(Uj1.^2+Uj2.^2);
 Sd1 = abs(u(2) - u(1));
-IDR_maxSDOF = Sd1/((2/3)*hroof*12);
-IDR_maxMDOF = (2/3)*Beta1*Beta2*IDR_maxSDOF;
+% Sd1 = B1*An1*gravity/w1squared;
+IDR_maxSDOF = Sd1/H;%Sd1/((2/3)*hroof*12);
+IDR_maxMDOF = Beta1*Beta2*Sd1/hroof;%(2/3)*Beta1*Beta2*IDR_maxSDOF;
 
 drift = IDR_maxMDOF;
 end

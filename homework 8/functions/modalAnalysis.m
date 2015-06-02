@@ -48,4 +48,8 @@ function [F,V,U,drift] = modalAnalysis(nfloors,mass,stiffness,Csm,Hi)
         drift(:,i) = (displacement - [0 displacement(1:end-1)']')/(Hi*12);
         drift(:,i) = flipud(drift(:,i));
     end
+    
+    F = flipud(F);
+    V = flipud(V);
+    
 end
