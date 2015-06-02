@@ -1,4 +1,4 @@
-function [F,V,U,drift] = modalAnalysis(nfloors,nmodes,mass,stiffness,Csm,Hi)
+function [F,V,U,drift] = modalAnalysis(nfloors,mass,stiffness,Csm,Hi)
     % Find the spectral acceleration of each mode
     % Inputs:
     %   @nfloors: the number of floors in the building
@@ -17,21 +17,21 @@ function [F,V,U,drift] = modalAnalysis(nfloors,nmodes,mass,stiffness,Csm,Hi)
     %   @deltaXe: The reduced elastic drift at each storey. deltaXe(1) is top floor
     %   @deltaX: The inelastic drift at each storey. deltaX(1) is top floor
     
+    nmodes = length(Csm);
     [w,T,sphi,Gamma] = eigenvalueAnalysis(nfloors,nmodes,mass,stiffness);
     
-    nmodes = length(Csm);
     
     g = 386.1;
-    F = zeros(length(T),nmodes);
-    V = zeros(length(T),nmodes);
-    U = zeros(length(T),nmodes);
-    drift = zeros(length(T),nmodes);
+    F = zeros(size(sphi));
+    V = zeros(size(sphi));
+    U = zeros(size(sphi));
+    drift = zeros(size(sphi));
 
     for i=1:length(Csm)
         An = Csm(i)*g;
         
         % Compute the modal forces for mode i
-        F(:,i) = Gamma(i)*sphi(:,i).*mass*An;
+        F(:,i) = Gamma(i)*sphi(:,i).*mass'*An;
 
         % Make floor 9 F(1,1)
         F(:,i) = flipud(F(:,i));
