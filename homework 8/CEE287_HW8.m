@@ -122,13 +122,14 @@ figure;
 plot(alpha_range, drift_range, 'b-', alpha_design, targetdrift, 'ro'); grid on;
 xlabel('Alpha, \alpha'); ylabel('Max Interstory Drift Ratio');
 title('Influence of Alpha on IDR_{max}');
+text(alpha_design+0.01,targetdrift,['\alpha = ' num2str(alpha_design)],'Fill',[1 1 1]);
 
 
 %% Part B
 
 % Scale up stiffness from 2DOF system
 MDOF_mass = nfloors*mass;
-MDOF_stiffness = (nfloors+1)*mass*(2*pi/T1)^2;%16.6; %%%%%%%%%%%ks * MDOF_mass/ms;
+MDOF_stiffness = 16.6;%(nfloors+1)*mass*(2*pi/T1)^2;%16.6; %%%%%%%%%%%ks * MDOF_mass/ms;
 stiffness_fixed = stiffness*ones(1,nfloors);
 stiffness_isolated = [MDOF_stiffness,stiffness_fixed];
 
@@ -436,7 +437,7 @@ for i = 1:nT
  [~,~,~,~,~,Sa_GM(i),~,~] = RecurrenceSDOF(T_ds(i),0.05,A,dt,0,0,0);
 end
 
-plot(T_ds, Sa_GM, 'm-','LineWidth',2);
+plot(T_ds, Sa_GM, 'm-','LineWidth',1.2);
 legend('Design Spectra', 'Scaled Input GM', 'Location', 'best');
 ylim([0 1.8]);
 

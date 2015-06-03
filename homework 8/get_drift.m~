@@ -2,6 +2,7 @@ function drift = get_drift(alpha)
 
 gravity = 386.1; % in/s^2
 designSd1 = 1.0;
+targetDrift = 0.5/100; % 0.5%
 
 % Define the height of each floor in the building
 % The vector is defined from the bottom to top, starting at 0'
@@ -20,14 +21,17 @@ nmodes = 1;
 % Get the stiffness and mass matrix of the equivalent structure
 % Compute the mode shape for the first mode of vibration
 [M, K] = computeMatrices(nfloors,mass,stiffness);
-[~,~,sphi,GammaStruct] = eigenvalueAnalysis(nfloors,nmodes,mass,stiffness);
+[~,T,sphi,GammaStruct] = eigenvalueAnalysis(nfloors,nmodes,mass,stiffness);
 
 % Use the modal analysis to compute the equivalent lateral stiffness
 % and mass of the structure. These parameters will be normalization
 % dependant but the ratio of them will be unique.
 beta = 1/nfloors; % Assume same mass at each floor
+
 ks = sphi(:,1)'*K*sphi(:,1);
 ms = sphi(:,1)'*M*sphi(:,1);
+ki = alpha*ks;
+mi = beta*ms;
 
 % Analyze the equivalent 2DOF structure with the following properties
 % ks,ms,ki,mi. First a modal analysis is conducted to find the period
@@ -48,28 +52,27 @@ phi2 = [1, gamma2]';
 Gamma1 = (1+gamma1*beta)/(1+gamma1^2*beta);
 Gamma2 = (1+gamma2*beta)/(1+gamma2^2*beta);
 
-% Damping values for each mode
 E1 = 0.1;
 E2 = 0.035;
 
-% Calculating damping modification factors
 a1 = 1.303 + 0.436*log(E1);
 a2 = 1.303 + 0.436*log(E2);
 
 B1 = 1 - a1*T1^0.3/(T1+1)^0.65;
 B2 = 1 - a2*T2^0.3/(T2+1)^0.65;
 
-% Accelerations at each mode, with damping modification factor included
 An1 = B1*designSd1/T1;
 An2 = B2*designSd1;
 
-% Displacements for each mode
+
 Uj1 = Gamma1*phi1*An1*gravity/w1squared;
 Uj2 = Gamma2*phi2*An2*gravity/w2squared;
 
 % Converting heights to inches
 hroof = hroof*12;
 heights = heights*12;
+% Finding SDOF height
+H = (2/3)*hroof;
 
 % Solving for beta values
 Beta1 = GammaStruct*sphi(end);
@@ -81,6 +84,7 @@ u = sqrt(Uj1.^2+Uj2.^2);
 Sd1 = abs(u(2) - u(1));
 
 % Calculating max IDR
+IDR_maxSDOF = Sd1/H;%Sd1/((2/3)*hroof*12);
 IDR_maxMDOF = Beta1*Beta2*Sd1/hroof;%(2/3)*Beta1*Beta2*IDR_maxSDOF;
 
 drift = IDR_maxMDOF;
